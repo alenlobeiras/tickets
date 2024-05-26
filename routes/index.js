@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const router = express.Router();
-const db = require('../firebase-config');
+const { db, auth } = require('../firebase-config');
 
 // Middleware para verificar la autenticación del usuario
 function isAuthenticated(req, res, next) {
@@ -39,6 +39,7 @@ router.post('/login', async (req, res) => {
 
   if (passwordMatch) {
     req.session.user = { username };
+    await auth.signInWithEmailAndPassword(username, password);
     res.redirect('/tickets');
   } else {
     res.send('Contraseña incorrecta');

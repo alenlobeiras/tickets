@@ -1,6 +1,7 @@
 // firebase-config.js
 const firebase = require("firebase/app");
 require("firebase/firestore");
+require("firebase/auth");
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -13,5 +14,6 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
-module.exports = db;
+module.exports = { db, auth };

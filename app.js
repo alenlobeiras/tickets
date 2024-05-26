@@ -1,8 +1,9 @@
+// app.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const session = require('express-session');
-const db = require('./firebase-config');
+const { db, auth } = require('./firebase-config');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
