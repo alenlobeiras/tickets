@@ -1,0 +1,9 @@
+###################################
+#Files not upload to git
+###################################
+**/.DS_Store
+.DS_Store
+node_modules
+.vercel
+.scss
+.env
