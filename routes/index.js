@@ -29,20 +29,24 @@ router.get('/resumen', isAuthenticated, (req, res) => {
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  const userSnapshot = await db.collection('users').doc(username).get();
-  if (!userSnapshot.exists) {
-    return res.send('Usuario no encontrado');
-  }
+  try {
+    const userSnapshot = await db.collection('users').doc(username).get();
+    if (!userSnapshot.exists) {
+      return res.send('Usuario no encontrado');
+    }
 
-  const user = userSnapshot.data();
-  const passwordMatch = await bcrypt.compare(password, user.password);
+    const user = userSnapshot.data();
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
-  if (passwordMatch) {
-    req.session.user = { username };
-    await auth.signInWithEmailAndPassword(username, password);
-    res.redirect('/tickets');
-  } else {
-    res.send('Contraseña incorrecta');
+    if (passwordMatch) {
+      req.session.user = { username };
+      await auth.signInWithEmailAndPassword(username, password);
+      res.redirect('/tickets');
+    } else {
+      res.send('Contraseña incorrecta');
+    }
+  } catch (error) {
+    res.status(500).send('Error al iniciar sesión: ' + error.message);
   }
 });
 
@@ -50,44 +54,58 @@ router.post('/tickets', isAuthenticated, async (req, res) => {
   const { ticketNumber } = req.body;
   const user = req.session.user;
 
-  const ticketDoc = await db.collection('tickets').doc(ticketNumber).get();
-  if (ticketDoc.exists) {
-    return res.status(400).send('Ticket ya validado');
-  } else {
-    await db.collection('tickets').doc(ticketNumber).set({
-      number: ticketNumber,
-      user: user.username,
-      date: new Date()
-    });
-    res.status(200).send('Ticket validado correctamente');
+  try {
+    const ticketDoc = await db.collection('tickets').doc(ticketNumber).get();
+    if (ticketDoc.exists) {
+      return res.status(400).send('Ticket ya validado');
+    } else {
+      await db.collection('tickets').doc(ticketNumber).set({
+        number: ticketNumber,
+        user: user.username,
+        date: new Date()
+      });
+      res.status(200).send('Ticket validado correctamente');
+    }
+  } catch (error) {
+    res.status(500).send('Error al validar el ticket: ' + error.message);
   }
 });
 
 router.get('/api/tickets', isAuthenticated, async (req, res) => {
   const user = req.session.user;
-  const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
-  const tickets = ticketsSnapshot.docs.map(doc => doc.data());
-  res.json(tickets);
+
+  try {
+    const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
+    const tickets = ticketsSnapshot.docs.map(doc => doc.data());
+    res.json(tickets);
+  } catch (error) {
+    res.status(500).send('Error al obtener los tickets: ' + error.message);
+  }
 });
 
 router.get('/api/resumen', isAuthenticated, async (req, res) => {
   const user = req.session.user;
-  const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
-  const tickets = ticketsSnapshot.docs.map(doc => doc.data());
 
-  const resumen = {};
-  tickets.forEach(ticket => {
-    const date = ticket.date.toDate();
-    const month = date.getMonth() + 1;
-    const week = Math.ceil(date.getDate() / 7);
+  try {
+    const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
+    const tickets = ticketsSnapshot.docs.map(doc => doc.data());
 
-    if (!resumen[month]) resumen[month] = {};
-    if (!resumen[month][week]) resumen[month][week] = [];
+    const resumen = {};
+    tickets.forEach(ticket => {
+      const date = ticket.date.toDate();
+      const month = date.getMonth() + 1;
+      const week = Math.ceil(date.getDate() / 7);
 
-    resumen[month][week].push(ticket);
-  });
+      if (!resumen[month]) resumen[month] = {};
+      if (!resumen[month][week]) resumen[month][week] = [];
 
-  res.json(resumen);
+      resumen[month][week].push(ticket);
+    });
+
+    res.json(resumen);
+  } catch (error) {
+    res.status(500).send('Error al obtener el resumen: ' + error.message);
+  }
 });
 
 module.exports = router;
