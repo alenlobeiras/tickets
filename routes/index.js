@@ -6,21 +6,21 @@ const router = express.Router();
 const db = require('../firebase-config');
 
 router.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../views/login.html'));
+  res.sendFile(path.join(__dirname, '/login.html'));
 });
 
 router.get('/tickets', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/');
   }
-  res.sendFile(path.join(__dirname, '../views/tickets.html'));
+  res.sendFile(path.join(__dirname, '/tickets.html'));
 });
 
 router.get('/resumen', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/');
   }
-  res.sendFile(path.join(__dirname, '../views/resumen.html'));
+  res.sendFile(path.join(__dirname, '/resumen.html'));
 });
 
 router.post('/login', async (req, res) => {
