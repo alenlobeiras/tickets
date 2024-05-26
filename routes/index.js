@@ -1,7 +1,8 @@
 const express = require('express');
 const path = require('path');
+const firebase = require('firebase');
 const router = express.Router();
-const { db } = require('../firebase-config');
+const { db, auth } = require('../firebase-config');
 
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
@@ -41,6 +42,8 @@ router.post('/login', async (req, res) => {
 
     if (password === user.password) {
       req.session.user = { username };
+      // Autenticación con Firebase Authentication
+      await firebase.auth().signInWithEmailAndPassword(user.email, password);
       console.log('User signed in successfully');
       res.redirect('/tickets');
     } else {
