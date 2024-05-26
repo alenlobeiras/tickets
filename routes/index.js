@@ -1,8 +1,7 @@
 const express = require('express');
 const path = require('path');
-const bcrypt = require('bcrypt');
 const router = express.Router();
-const { db, auth } = require('../firebase-config');
+const { db } = require('../firebase-config');
 
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
@@ -27,24 +26,29 @@ router.get('/resumen', isAuthenticated, (req, res) => {
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
+  console.log(`Attempting login for user: ${username}`);
+
   try {
-    const userSnapshot = await db.collection('users').doc(username).get();
-    if (!userSnapshot.exists) {
-      return res.send('Usuario no encontrado');
+    // Buscar el documento del usuario basado en el username
+    const usersSnapshot = await db.collection('users').where('username', '==', username).get();
+    if (usersSnapshot.empty) {
+      console.error('Usuario no encontrado');
+      return res.status(404).send('Usuario no encontrado');
     }
 
-    const user = userSnapshot.data();
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const user = usersSnapshot.docs[0].data();
+    console.log(`User found: ${JSON.stringify(user)}`);
 
-    if (passwordMatch) {
+    if (password === user.password) {
       req.session.user = { username };
-      // Autenticación con Firebase Authentication
-      await auth.signInWithEmailAndPassword(username, password);
+      console.log('User signed in successfully');
       res.redirect('/tickets');
     } else {
-      res.send('Contraseña incorrecta');
+      console.error('Contraseña incorrecta');
+      res.status(401).send('Contraseña incorrecta');
     }
   } catch (error) {
+    console.error('Error al iniciar sesión:', error);
     res.status(500).send('Error al iniciar sesión: ' + error.message);
   }
 });
