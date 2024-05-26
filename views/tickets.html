@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/styles.css">
+  <title>Tickets</title>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Mis Tickets</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>N° Ticket</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+        </tr>
+      </thead>
+      <tbody id="ticketsTable">
+      </tbody>
+    </table>
+    <form id="ticketForm">
+      <input type="text" name="ticketNumber" placeholder="Número de Ticket" required>
+      <button type="submit">Añadir Ticket</button>
+    </form>
+  </div>
+  <script src="/js/scripts.js"></script>
+</body>
+
+</html>

@@ -2,14 +2,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const session = require('express-session');
 const db = require('./firebase-config');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: 'tu_secreto_aqui',
+  resave: false,
+  saveUninitialized: true
+}));
 
 const indexRouter = require('./routes/index');
 app.use('/', indexRouter);

@@ -1,45 +1,58 @@
 // routes/index.js
 const express = require('express');
+const path = require('path');
+const bcrypt = require('bcrypt');
 const router = express.Router();
 const db = require('../firebase-config');
 
-// Middleware para verificar la autenticación del usuario
-function isAuthenticated(req, res, next) {
-  if (req.session && req.session.user) {
-    return next();
-  } else {
-    res.redirect('/login');
+router.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/login.html'));
+});
+
+router.get('/tickets', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/');
   }
-}
-
-// Página de inicio de sesión
-router.get('/login', (req, res) => {
-  res.render('login');
+  res.sendFile(path.join(__dirname, '../views/tickets.html'));
 });
 
-router.post('/login', (req, res) => {
+router.get('/resumen', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/');
+  }
+  res.sendFile(path.join(__dirname, '../views/resumen.html'));
+});
+
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  // Aquí iría la lógica para validar las credenciales
-  // Por simplicidad, aceptamos cualquier usuario
-  req.session.user = { username };
-  res.redirect('/tickets');
+
+  const userSnapshot = await db.collection('users').doc(username).get();
+  if (!userSnapshot.exists) {
+    return res.send('Usuario no encontrado');
+  }
+
+  const user = userSnapshot.data();
+  const passwordMatch = await bcrypt.compare(password, user.password);
+
+  if (passwordMatch) {
+    req.session.user = { username };
+    res.redirect('/tickets');
+  } else {
+    res.send('Contraseña incorrecta');
+  }
 });
 
-// Página de tickets
-router.get('/tickets', isAuthenticated, async (req, res) => {
-  const user = req.session.user;
-  const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
-  const tickets = ticketsSnapshot.docs.map(doc => doc.data());
-  res.render('tickets', { tickets });
-});
+router.post('/tickets', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).send('No autenticado');
+  }
 
-router.post('/tickets', isAuthenticated, async (req, res) => {
   const { ticketNumber } = req.body;
   const user = req.session.user;
 
   const ticketDoc = await db.collection('tickets').doc(ticketNumber).get();
   if (ticketDoc.exists) {
-    res.status(400).send('Ticket ya validado');
+    return res.status(400).send('Ticket ya validado');
   } else {
     await db.collection('tickets').doc(ticketNumber).set({
       number: ticketNumber,
@@ -50,13 +63,26 @@ router.post('/tickets', isAuthenticated, async (req, res) => {
   }
 });
 
-// Resumen de tickets
-router.get('/resumen', isAuthenticated, async (req, res) => {
+router.get('/api/tickets', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).send('No autenticado');
+  }
+
+  const user = req.session.user;
+  const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
+  const tickets = ticketsSnapshot.docs.map(doc => doc.data());
+  res.json(tickets);
+});
+
+router.get('/api/resumen', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).send('No autenticado');
+  }
+
   const user = req.session.user;
   const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
   const tickets = ticketsSnapshot.docs.map(doc => doc.data());
 
-  // Agrupamos los tickets por mes y semana
   const resumen = {};
   tickets.forEach(ticket => {
     const date = ticket.date.toDate();
@@ -69,7 +95,7 @@ router.get('/resumen', isAuthenticated, async (req, res) => {
     resumen[month][week].push(ticket);
   });
 
-  res.render('resumen', { resumen });
+  res.json(resumen);
 });
 
 module.exports = router;
