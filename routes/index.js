@@ -1,4 +1,3 @@
-// routes/index.js
 const express = require('express');
 const path = require('path');
 const bcrypt = require('bcrypt');
@@ -6,21 +5,21 @@ const router = express.Router();
 const db = require('../firebase-config');
 
 router.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '/login.html'));
+  res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
 router.get('/tickets', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/');
   }
-  res.sendFile(path.join(__dirname, '/tickets.html'));
+  res.sendFile(path.join(__dirname, '../public/tickets.html'));
 });
 
 router.get('/resumen', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/');
   }
-  res.sendFile(path.join(__dirname, '/resumen.html'));
+  res.sendFile(path.join(__dirname, '../public/resumen.html'));
 });
 
 router.post('/login', async (req, res) => {

@@ -1,4 +1,3 @@
-// app.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -22,3 +21,5 @@ app.use('/', indexRouter);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports = app; // Exporta la app para que Vercel pueda usarla
