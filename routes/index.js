@@ -1,11 +1,9 @@
-// routes/index.js
 const express = require('express');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const { db, auth } = require('../firebase-config');
 
-// Middleware para verificar la autenticación del usuario
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
     return next();
@@ -40,6 +38,7 @@ router.post('/login', async (req, res) => {
 
     if (passwordMatch) {
       req.session.user = { username };
+      // Autenticación con Firebase Authentication
       await auth.signInWithEmailAndPassword(username, password);
       res.redirect('/tickets');
     } else {
