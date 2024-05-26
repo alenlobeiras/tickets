@@ -1,24 +1,28 @@
+// routes/index.js
 const express = require('express');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 const db = require('../firebase-config');
 
+// Middleware para verificar la autenticación del usuario
+function isAuthenticated(req, res, next) {
+  if (req.session && req.session.user) {
+    return next();
+  } else {
+    res.redirect('/');
+  }
+}
+
 router.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
-router.get('/tickets', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/');
-  }
+router.get('/tickets', isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/tickets.html'));
 });
 
-router.get('/resumen', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/');
-  }
+router.get('/resumen', isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/resumen.html'));
 });
 
@@ -41,11 +45,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/tickets', async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).send('No autenticado');
-  }
-
+router.post('/tickets', isAuthenticated, async (req, res) => {
   const { ticketNumber } = req.body;
   const user = req.session.user;
 
@@ -62,22 +62,14 @@ router.post('/tickets', async (req, res) => {
   }
 });
 
-router.get('/api/tickets', async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).send('No autenticado');
-  }
-
+router.get('/api/tickets', isAuthenticated, async (req, res) => {
   const user = req.session.user;
   const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
   const tickets = ticketsSnapshot.docs.map(doc => doc.data());
   res.json(tickets);
 });
 
-router.get('/api/resumen', async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).send('No autenticado');
-  }
-
+router.get('/api/resumen', isAuthenticated, async (req, res) => {
   const user = req.session.user;
   const ticketsSnapshot = await db.collection('tickets').where('user', '==', user.username).get();
   const tickets = ticketsSnapshot.docs.map(doc => doc.data());
