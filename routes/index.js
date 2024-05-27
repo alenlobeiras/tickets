@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const firebase = require('firebase');
+const bcrypt = require('bcrypt');
 const router = express.Router();
 const { db, auth } = require('../firebase-config');
 
@@ -42,8 +42,6 @@ router.post('/login', async (req, res) => {
 
     if (password === user.password) {
       req.session.user = { username };
-      // Autenticación con Firebase Authentication
-      await firebase.auth().signInWithEmailAndPassword(user.email, password);
       console.log('User signed in successfully');
       res.redirect('/tickets');
     } else {
