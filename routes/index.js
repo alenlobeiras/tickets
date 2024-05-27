@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const bcrypt = require('bcrypt');
 const router = express.Router();
 const { db, auth } = require('../firebase-config');
 
@@ -30,7 +29,6 @@ router.post('/login', async (req, res) => {
   console.log(`Attempting login for user: ${username}`);
 
   try {
-    // Buscar el documento del usuario basado en el username
     const usersSnapshot = await db.collection('users').where('username', '==', username).get();
     if (usersSnapshot.empty) {
       console.error('Usuario no encontrado');
