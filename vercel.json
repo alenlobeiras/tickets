@@ -1,15 +1,9 @@
 {
-  "version": 2,
-  "builds": [
+  "redirects": [
     {
-      "src": "app.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "app.js"
+      "source": "/(.*)",
+      "destination": "https://autoescuelavivero.com/$1",
+      "permanent": true
     }
   ]
 }
